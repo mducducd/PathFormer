@@ -86,15 +86,15 @@ class WSIDatasetModule(LightningDataModule):
         self.test_dataset = None
 
     def setup(self, stage: Optional[str] = None):
-        #----> read .txt file and process it
+        # read .txt file and process it
         raw_df = pd.read_csv(self.label_dir, sep='\t')
         raw_df.columns = [col.strip() for col in raw_df.columns]
 
-        #----> extract sampleId from studyID:sampleId
+        # extract sampleId from studyID:sampleId
         raw_df['sampleId'] = raw_df.iloc[:, 0].apply(lambda x: x.split(':')[1])
         raw_df['label'] = raw_df['Altered'].astype(int)
 
-        #----> find valid .h5 files
+        # find valid .h5 files
         available_h5_files = list(Path(self.data_dir).glob("*.h5"))
 
         ### Some samples in .txt dont have coressponding .h5 
@@ -108,14 +108,14 @@ class WSIDatasetModule(LightningDataModule):
                 self.sampleid_to_path[sid] = file # Match sample_id from filename
 
 
-        #----> filter raw_df to keep only rows with valid sampleIds
+        # filter raw_df to keep only rows with valid sampleIds
         raw_df = raw_df[raw_df['sampleId'].isin(valid_sample_ids)].reset_index(drop=True)
 
-        #----> split data
+        # split data
         train_df, test_df = train_test_split(raw_df, test_size=0.2, random_state=42, stratify=raw_df['label'])
         # train_df, val_df = train_test_split(train_val_df, test_size=0.2, random_state=42, stratify=train_val_df['label'])
 
-        #----> assign datasets
+        # assign datasets
         self.train_dataset = WSIDataset(self.sampleid_to_path, train_df, "train")
         self.val_dataset = WSIDataset(self.sampleid_to_path, test_df, "val")
         self.test_dataset = WSIDataset(self.sampleid_to_path, test_df, "test")

@@ -13,11 +13,11 @@ from utils.lr_logger import LrLogger
 from utils.seed import Seed
 from utils.system_stats_logger import SystemStatsLogger
 
-#--->Setting parameters
+# Setting parameters
 def make_parse():
     parser = argparse.ArgumentParser()
     parser.add_argument('--stage', default='train', type=str)
-    parser.add_argument('--config', default='Camelyon\TransMIL.yaml',type=str)
+    parser.add_argument('--config', default='config\config.yaml',type=str)
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument('--gpus', default = [1])
     parser.add_argument("--resume", type=str, default=None, help="Path to checkpoint to resume training.")
@@ -31,14 +31,14 @@ def train(args, cfg):
     max_epochs = cfg.General.epochs
     n_gpus = 1
 
-    #---->Define Model 
+    # Define Model 
     model = Classifier(
             cfg.Model.n_classes, False, "binary", cfg.Optimizer.lr
         )
     # for param in model.parameters():
     #     param.requires_grad = True
 
-    #---->Define Data 
+    # Define Data 
     dm = WSIDatasetModule(
             data_dir=cfg.Data.data_dir,
             label_dir=cfg.Data.label_dir,
@@ -120,7 +120,7 @@ def evaluate_celebvhq(args, cfg, ckpt):
 def main(args):
     cfg = read_yaml(args.config)
 
-    #---->update
+    # update
     cfg.config = args.config
     cfg.General.gpus = args.gpus
     cfg.General.server = args.stage
@@ -131,8 +131,6 @@ def main(args):
         evaluate_celebvhq(args, cfg, args.ckpt)
    
 if __name__ == '__main__':
-
     args = make_parse()
 
-    #---->main
     main(args)

@@ -1,3 +1,8 @@
+"""
+    Code adapted from:
+    https://github.com/szc19990412/TransMIL/blob/main/models/TransMIL.py
+"""
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

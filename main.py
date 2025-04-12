@@ -2,7 +2,7 @@ import argparse
 from datasets import WSIDatasetModule
 from models import Classifier
 from utils.utils import *
-
+from omegaconf import OmegaConf
 # pytorch_lightning
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -16,7 +16,7 @@ from utils.system_stats_logger import SystemStatsLogger
 def make_parse():
     parser = argparse.ArgumentParser()
     parser.add_argument('--stage', default='train', type=str)
-    parser.add_argument('--config', default='config\config.yaml',type=str)
+    parser.add_argument('--config', default='config\TransMIL.yaml',type=str)
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument('--gpus', default = [1])
     parser.add_argument("--resume", type=str, default=None, help="Path to checkpoint to resume training.")
@@ -31,9 +31,7 @@ def train(args, cfg):
     n_gpus = 1
 
     # Define Model 
-    model = Classifier(
-            num_classes=cfg.Model.n_classes, task="binary", learning_rate=cfg.Optimizer.lr, model_name='TransMIL'
-        )
+    model = Classifier(cfg)
     
     # Define Data 
     dm = WSIDatasetModule(
@@ -114,12 +112,7 @@ def evaluate_celebvhq(args, cfg, ckpt):
 
 
 def main(args):
-    cfg = read_yaml(args.config)
-
-    # update
-    cfg.config = args.config
-    cfg.General.gpus = args.gpus
-    cfg.General.server = args.stage
+    cfg = OmegaConf.load(args.config)
 
     if args.stage == 'train':
         ckpt, dm = train(args, cfg)

@@ -1,28 +1,26 @@
 from typing import Optional, Union, Sequence, Dict, Literal, Any
-
+import models as module_arch
 from pytorch_lightning import LightningModule
 from torch import Tensor
 from torch.nn import CrossEntropyLoss, Linear, Identity, BCEWithLogitsLoss
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import torchmetrics 
-from models.TransMIL import TransMIL
-from utils.utils import cross_entropy_torch
 
 class Classifier(LightningModule):
 
-    def __init__(self, num_classes: int, model_name: str = 'TransMIL',
+    def __init__(self, cfg: Dict,
         task: Literal["binary", "multiclass", "multilabel"] = "binary",
-        learning_rate: float = 1e-4, distributed: bool = False
+        distributed: bool = False
     ):
         super().__init__()
         self.save_hyperparameters()
 
         self.task = task
-        self.n_classes = num_classes
-        self.learning_rate = learning_rate
+        self.n_classes = cfg.General.n_classes
+        self.learning_rate = cfg.Optimizer.lr
         self.distributed = distributed
-        self.model_name = model_name
+        self.model_name = cfg.Model.name
    
         # if self.n_classes > 2: 
         self.loss_fn = CrossEntropyLoss()
@@ -57,8 +55,7 @@ class Classifier(LightningModule):
         # if finetune:
         #     pass
         # else:
-        if self.model_name == 'TransMIL':
-            self.model = TransMIL(n_classes=self.n_classes)
+        self.model = getattr(module_arch, self.model_name)(**cfg.Model.args)
 
 
     @classmethod
@@ -69,9 +66,10 @@ class Classifier(LightningModule):
         return self.model(*args, **kwargs)
     
     def step(self, batch: Optional[Union[Tensor, Sequence[Tensor]]]) -> Dict[str, Tensor]:
-        x, y = batch
-        y_hat = self(x)
-        y_hat = y_hat
+        if self.model_name == 'TransMIL':
+            x, y, *rest= batch
+            y_hat = self(x)
+            y_hat = y_hat
 
         # if self.task == "multilabel":
         #     y_hat = y_hat.flatten()

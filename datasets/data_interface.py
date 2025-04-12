@@ -57,8 +57,8 @@ class WSIDataset(LightningDataModule, ABC):
         #     coords = coords[indices]
         #     augmented = augmented[indices]
 
-        # return sample_id, feats, label, coords, augmented, label
-        return feats, torch.tensor(label, dtype=torch.long)
+        return feats, torch.tensor(label, dtype=torch.long), coords, augmented
+        # return feats, torch.tensor(label, dtype=torch.long)
 
     def __len__(self):
         return len(self.data)

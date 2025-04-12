@@ -1,0 +1,7 @@
+*.log
+ckpt/
+dataset_csv/
+MyLoss/
+README.md
+logs/
+lightning_logs/

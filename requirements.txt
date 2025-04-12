@@ -1,0 +1,13 @@
+addict==2.2.1
+albumentations==0.4.3
+numpy==1.26.4
+einops
+omegaconf
+opencv-python
+opencv-python-headless
+pandas
+Pillow
+pytorch-lightning==1.7.7
+scikit-learn
+pytorch-toolbelt==0.0.3
+torchmetrics==0.11.4

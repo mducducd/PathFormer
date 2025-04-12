@@ -1,2 +1,2 @@
-from .model_interface import ModelInterface
+from .classifier import Classifier
 from .nystrom_attention import NystromAttention

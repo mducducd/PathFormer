@@ -1,14 +1,10 @@
 import argparse
-from pathlib import Path
-import numpy as np
-import glob
 
-from datasets import DataInterface, WSIDatasetModule
-from models.classifier import Classifier
+from datasets import WSIDatasetModule
+from models import Classifier
 from utils.utils import *
 
 # pytorch_lightning
-import pytorch_lightning as pl
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
 from tqdm.auto import tqdm
@@ -100,7 +96,6 @@ def evaluate_celebvhq(args, cfg, ckpt):
     ys = torch.zeros_like(preds, dtype=torch.bool)
  
     for i, (_, y) in enumerate(tqdm(dm.test_dataloader())):
-        # print('ddddddddddddd', i, y.shape)
         ys[i * args.batch_size: (i + 1) * args.batch_size] = y
 
     from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, roc_curve

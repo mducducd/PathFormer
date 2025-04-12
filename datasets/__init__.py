@@ -1,2 +1,2 @@
 
-from .data_interface import DataInterface, WSIDatasetModule
+from .data_interface import  WSIDatasetModule

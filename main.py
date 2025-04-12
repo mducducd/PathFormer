@@ -1,5 +1,4 @@
 import argparse
-
 from datasets import WSIDatasetModule
 from models import Classifier
 from utils.utils import *
@@ -33,11 +32,9 @@ def train(args, cfg):
 
     # Define Model 
     model = Classifier(
-            cfg.Model.n_classes, False, "binary", cfg.Optimizer.lr
+            num_classes=cfg.Model.n_classes, task="binary", learning_rate=cfg.Optimizer.lr, model_name='TransMIL'
         )
-    # for param in model.parameters():
-    #     param.requires_grad = True
-
+    
     # Define Data 
     dm = WSIDatasetModule(
             data_dir=cfg.Data.data_dir,
@@ -82,7 +79,7 @@ def evaluate_celebvhq(args, cfg, ckpt):
     dm = WSIDatasetModule(
         data_dir=cfg.Data.data_dir,
         label_dir=cfg.Data.label_dir,
-        batch_size=args.batch_size,
+        batch_size=1,  # During test samples are vary in N titles
         num_workers=1, 
     )
     dm.setup()
@@ -98,15 +95,14 @@ def evaluate_celebvhq(args, cfg, ckpt):
     for i, (_, y) in enumerate(tqdm(dm.test_dataloader())):
         ys[i * args.batch_size: (i + 1) * args.batch_size] = y
 
+    # Eval
     from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, roc_curve
-    import numpy as np
-    
-    
+  
     # Convert one-hot encoded labels to class indices
     y_true = ys.numpy()
     # y_pred = preds_bool.numpy()
     y_pred = preds.numpy()
-    print('hohohohohohohoh', y_true.shape, y_pred.shape)
+
     # from torcheval.metrics.functional import multiclass_f1_score
     precision = precision_score(y_true, y_pred, average=None)
     recall = recall_score(y_true, y_pred, average=None)

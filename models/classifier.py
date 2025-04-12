@@ -11,7 +11,7 @@ from utils.utils import cross_entropy_torch
 
 class Classifier(LightningModule):
 
-    def __init__(self, num_classes: int, finetune: bool,
+    def __init__(self, num_classes: int, model_name: str = 'TransMIL',
         task: Literal["binary", "multiclass", "multilabel"] = "binary",
         learning_rate: float = 1e-4, distributed: bool = False
     ):
@@ -22,6 +22,7 @@ class Classifier(LightningModule):
         self.n_classes = num_classes
         self.learning_rate = learning_rate
         self.distributed = distributed
+        self.model_name = model_name
    
         # if self.n_classes > 2: 
         self.loss_fn = CrossEntropyLoss()
@@ -56,16 +57,16 @@ class Classifier(LightningModule):
         # if finetune:
         #     pass
         # else:
-        self.model = TransMIL(n_classes=num_classes)
-        for param in self.model.parameters():
-            param.requires_grad = True  # Ensure all params are trainable
+        if self.model_name == 'TransMIL':
+            self.model = TransMIL(n_classes=self.n_classes)
+
 
     @classmethod
     def from_module(cls, model, learning_rate: float = 1e-4, distributed=False):
         return cls(model, learning_rate, distributed)
     
-    def forward(self, x):
-        return self.model(x)
+    def forward(self, *args, **kwargs):
+        return self.model(*args, **kwargs)
     
     def step(self, batch: Optional[Union[Tensor, Sequence[Tensor]]]) -> Dict[str, Tensor]:
         x, y = batch

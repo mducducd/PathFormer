@@ -68,7 +68,7 @@ class Classifier(LightningModule):
     def step(self, batch: Optional[Union[Tensor, Sequence[Tensor]]]) -> Dict[str, Tensor]:
         if self.model_name == 'VisionTransformer':
             bags, y, coords, bagSizes = batch
-            y_hat = self(bags, coords=coords)
+            y_hat = self(bags, coords=coords, mask=None)
             y_hat = y_hat
         else:
             x, y, *rest = batch
@@ -102,7 +102,10 @@ class Classifier(LightningModule):
         return loss_dict["loss"]
 
     def predict_step(self, batch: Tensor, batch_idx: int, dataloader_idx: Optional[int] = None) -> Any:
-        return self(batch[0])
+        if self.model_name == 'VisionTransformer':
+            return self(batch[0], coords=batch[2], mask=None)
+        else:
+            return self(batch[0])
 
     def configure_optimizers(self):
         optimizer = Adam(self.parameters(), lr=self.learning_rate, betas=(0.9, 0.999))

@@ -205,7 +205,10 @@ class _ALiBi(nn.Module):
         masked_distances = scaled_distances.where(~alibi_mask, 0.0)
 
         weights = torch.softmax(weight_logits, dim=-1)
-        masked = (weights - masked_distances).where(~attn_mask, 0.0)
+        if attn_mask is not None:
+            masked = (weights - masked_distances).where(~attn_mask, 0.0)
+        else:
+            masked = weights - masked_distances
 
         attention = torch.einsum("bqk,bvf->bqf", masked, v)
 

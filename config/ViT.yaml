@@ -35,16 +35,16 @@ Model:
     args:
       dim_output: 2
       dim_input: 1024
-      dim_model: 192
+      dim_model: 768
       n_layers: 2
-      n_heads: 4
-      dim_feedforward: 768
+      n_heads: 12
+      dim_feedforward: 3072
       dropout: 0.1
       use_alibi: True
 
 Optimizer:
     opt: lookahead_radam
-    lr: 0.0002
+    lr: 0.0001
     opt_eps: null
     opt_betas: null
     momentum: null

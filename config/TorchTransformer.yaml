@@ -31,16 +31,15 @@ Data:
         num_workers: 1
 
 Model:
-    name: VisionTransformer
+    name: TorchTransformer
+    use_coords: False
     args:
-      dim_output: 2
-      dim_input: 1024
-      dim_model: 768
-      n_layers: 2
-      n_heads: 12
-      dim_feedforward: 3072
-      dropout: 0.1
-      use_alibi: True
+        input_dim: 1024 
+        embed_dim: 512 
+        num_heads: 8 
+        ff_dim: 2048 
+        num_classes: 2 
+        dropout: 0.1
 
 Optimizer:
     opt: lookahead_radam

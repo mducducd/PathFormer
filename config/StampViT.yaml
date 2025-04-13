@@ -1,0 +1,55 @@
+General:
+    comment: null
+    seed: 42
+    fp16: true
+    amp_level: O2
+    precision: 16
+    multi_gpu_mode: dp
+    gpus: [0]
+    epochs: 200
+    grad_acc: 2
+    frozen_bn: false
+    patience: 10
+    server: test #train #test
+    log_path: logs/
+    n_classes: 2
+
+Data:
+    dataset_name: camel_data
+    data_shuffle: false
+    data_dir: D:\\task_dresen\\TCGA_BRCA
+    label_dir: D:\\task_dresen\\sample_matrix.txt
+    fold: 0
+    nfold: 4
+
+    train_dataloader:
+        batch_size: 16
+        num_workers: 1
+
+    test_dataloader:
+        batch_size: 16
+        num_workers: 1
+
+Model:
+    name: VisionTransformer
+    use_coords: True
+    args:
+      dim_output: 2
+      dim_input: 1024
+      dim_model: 512
+      n_layers: 2
+      n_heads: 8
+      dim_feedforward: 2048
+      dropout: 0.1
+      use_alibi: True
+
+Optimizer:
+    opt: lookahead_radam
+    lr: 0.0001
+    opt_eps: null
+    opt_betas: null
+    momentum: null
+    weight_decay: 0.00001
+
+Loss:
+    base_loss: CrossEntropyLoss

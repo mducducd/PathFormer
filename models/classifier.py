@@ -21,6 +21,7 @@ class Classifier(LightningModule):
         self.learning_rate = cfg.Optimizer.lr
         self.distributed = distributed
         self.model_name = cfg.Model.name
+        self.use_coords = cfg.Model.use_coords
    
         # if self.n_classes > 2: 
         self.loss_fn = CrossEntropyLoss()
@@ -66,9 +67,9 @@ class Classifier(LightningModule):
         return self.model(*args, **kwargs)
     
     def step(self, batch: Optional[Union[Tensor, Sequence[Tensor]]]) -> Dict[str, Tensor]:
-        if self.model_name == 'VisionTransformer':
-            bags, y, coords, bagSizes = batch
-            y_hat = self(bags, coords=coords, mask=None)
+        if self.use_coords:
+            bags, y, coords, mask = batch
+            y_hat = self(bags, coords, None)
             y_hat = y_hat
         else:
             x, y, *rest = batch
@@ -102,8 +103,8 @@ class Classifier(LightningModule):
         return loss_dict["loss"]
 
     def predict_step(self, batch: Tensor, batch_idx: int, dataloader_idx: Optional[int] = None) -> Any:
-        if self.model_name == 'VisionTransformer':
-            return self(batch[0], coords=batch[2], mask=None)
+        if self.use_coords:
+            return self(batch[0], batch[2], None)
         else:
             return self(batch[0])
 

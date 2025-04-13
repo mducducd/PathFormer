@@ -1,3 +1,7 @@
+"""
+    Reference:
+    github.com/KatherLab/STAMP/
+"""
 import torch
 from torch import Tensor, nn
 
@@ -361,7 +365,6 @@ class VisionTransformer(nn.Module):
     def forward(
         self,
         bags: Tensor,
-        *,
         coords: Tensor,
         mask: Optional[Tensor],
     ) -> Tensor:

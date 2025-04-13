@@ -61,6 +61,10 @@ def train(args, cfg):
             strategy=None, resume_from_checkpoint=resume_ckpt,
             callbacks=[ckpt_callback, LrLogger(), EarlyStoppingLR(1e-6), SystemStatsLogger()])
     
+    if args.resume:
+        print("Resume checkpoint", args.resume)
+        model = Classifier.load_from_checkpoint(args.resume)
+    
     trainer.fit(model, dm)
     # trainer.test(model, datamodule=dm)
 
@@ -68,6 +72,7 @@ def train(args, cfg):
 
 def evaluate_celebvhq(args, cfg, ckpt):
     print("Load checkpoint", ckpt)
+    # Define Model 
     model = Classifier.load_from_checkpoint(ckpt)
     trainer = Trainer(log_every_n_steps=1, devices=[0], accelerator="gpu", benchmark=True,
         logger=False, enable_checkpointing=False)
@@ -90,7 +95,7 @@ def evaluate_celebvhq(args, cfg, ckpt):
     preds = torch.argmax(preds.sigmoid(), dim=1)
     ys = torch.zeros_like(preds, dtype=torch.bool)
  
-    for i, (_, y) in enumerate(tqdm(dm.test_dataloader())):
+    for i, (_, y, _, _) in enumerate(tqdm(dm.test_dataloader())):
         ys[i * args.batch_size: (i + 1) * args.batch_size] = y
 
     # Eval

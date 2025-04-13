@@ -2,6 +2,17 @@ import torch
 from torch import Tensor, nn
 
 
+def mask_from_bags(
+    bags: Tensor,
+    bag_sizes: Tensor,
+) -> Tensor:
+    max_possible_bag_size = bags.size(1)
+    mask = torch.arange(max_possible_bag_size).type_as(bag_sizes).unsqueeze(0).repeat(
+        bag_sizes.shape[0], 1
+    ) >= bag_sizes.unsqueeze(1)
+
+    return mask
+
 class RunningMeanScaler(nn.Module):
     """Scales values by the inverse of the mean of values seen before."""
 
@@ -398,16 +409,7 @@ class VisionTransformer(nn.Module):
 #         )
 # from typing import BinaryIO, Generic, NewType, TextIO, TypeAlias, TypeVar, cast
 # # from jaxtyping import Bool, Float, Integer
-# def mask_from_bags(
-#     bags: Tensor,
-#     bag_sizes: Tensor,
-# ) -> Tensor:
-#     max_possible_bag_size = bags.size(1)
-#     mask = torch.arange(max_possible_bag_size).type_as(bag_sizes).unsqueeze(0).repeat(
-#         bag_sizes.shape[0], 1
-#     ) >= bag_sizes.unsqueeze(1)
 
-#     return mask
 
 # bags = torch.rand(1, 16, 1024)
 # coords = torch.rand(1, 16, 2)

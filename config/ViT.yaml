@@ -31,7 +31,7 @@ Data:
         num_workers: 1
 
 Model:
-    name: ViT
+    name: VisionTransformer
     args:
       dim_output: 2
       dim_input: 1024

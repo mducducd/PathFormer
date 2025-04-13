@@ -66,7 +66,12 @@ class Classifier(LightningModule):
         return self.model(*args, **kwargs)
     
     def step(self, batch: Optional[Union[Tensor, Sequence[Tensor]]]) -> Dict[str, Tensor]:
-        if self.model_name == 'TransMIL':
+        if self.model_name == 'VisionTransformer':
+            bags, y, coords, bagSizes = batch
+            # print('vvvvvvvvvvvvvvvvvvvvv', bags.shape, coords.shape, bagSizes)
+            y_hat = self(bags, coords=coords)
+            y_hat = y_hat
+        else:
             x, y, *rest= batch
             y_hat = self(x)
             y_hat = y_hat

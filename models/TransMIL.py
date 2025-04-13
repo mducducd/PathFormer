@@ -62,7 +62,7 @@ class TransMIL(nn.Module):
 
 
     # def forward(self, **kwargs):
-    def forward(self, h):
+    def forward(self, h, **kwargs):
 
         # h = kwargs['data'].float() #[B, n, 1024]
         

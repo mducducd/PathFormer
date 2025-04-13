@@ -68,11 +68,10 @@ class Classifier(LightningModule):
     def step(self, batch: Optional[Union[Tensor, Sequence[Tensor]]]) -> Dict[str, Tensor]:
         if self.model_name == 'VisionTransformer':
             bags, y, coords, bagSizes = batch
-            # print('vvvvvvvvvvvvvvvvvvvvv', bags.shape, coords.shape, bagSizes)
             y_hat = self(bags, coords=coords)
             y_hat = y_hat
         else:
-            x, y, *rest= batch
+            x, y, *rest = batch
             y_hat = self(x)
             y_hat = y_hat
 
@@ -106,7 +105,7 @@ class Classifier(LightningModule):
         return self(batch[0])
 
     def configure_optimizers(self):
-        optimizer = Adam(self.parameters(), lr=self.learning_rate, betas=(0.5, 0.9))
+        optimizer = Adam(self.parameters(), lr=self.learning_rate, betas=(0.9, 0.999))
         return {
             "optimizer": optimizer,
             "lr_scheduler": {

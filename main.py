@@ -17,10 +17,9 @@ def make_parse():
     parser = argparse.ArgumentParser()
     parser.add_argument('--stage', default='train', type=str)
     parser.add_argument('--config', default='config\TransMIL.yaml',type=str)
-    parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument('--gpus', default = [1])
-    parser.add_argument("--resume", type=str, default=None, help="Path to checkpoint to resume training.")
-    parser.add_argument("--ckpt", type=str, default=None, help="Path to checkpoint to evaluate.")
+    parser.add_argument("--resume", type=str, default=None, help="Path to checkpoint to resume training/test.")
     parser.add_argument("--skip_train", action="store_true", default=False, help="Skip training and evaluate only.")
     args = parser.parse_args()
     return args
@@ -54,6 +53,7 @@ def train(args, cfg):
     ckpt_callback = ModelCheckpoint(dirpath=f"ckpt/{cfg.Model.name}", save_last=True,
             filename=ckpt_filename,
             monitor=ckpt_monitor,
+            save_top_k=3,
             mode="max")
     
     trainer = Trainer(log_every_n_steps=1, devices=[0], accelerator='gpu', benchmark=True,
@@ -62,7 +62,6 @@ def train(args, cfg):
             callbacks=[ckpt_callback, LrLogger(), EarlyStoppingLR(1e-6), SystemStatsLogger()])
     
     if args.resume:
-        print("Resume checkpoint", args.resume)
         model = Classifier.load_from_checkpoint(args.resume)
     
     trainer.fit(model, dm)
@@ -79,10 +78,11 @@ def evaluate_celebvhq(args, cfg, ckpt):
     Seed.set(42)
     model.eval()
 
+    batch_size = 1 # During test samples are vary in N titles
     dm = WSIDatasetModule(
         data_dir=cfg.Data.data_dir,
         label_dir=cfg.Data.label_dir,
-        batch_size=1,  # During test samples are vary in N titles
+        batch_size=batch_size,  
         num_workers=1, 
     )
     dm.setup()
@@ -95,8 +95,8 @@ def evaluate_celebvhq(args, cfg, ckpt):
     preds = torch.argmax(preds.sigmoid(), dim=1)
     ys = torch.zeros_like(preds, dtype=torch.bool)
  
-    for i, (_, y, _, _) in enumerate(tqdm(dm.test_dataloader())):
-        ys[i * args.batch_size: (i + 1) * args.batch_size] = y
+    for i, list in enumerate(tqdm(dm.test_dataloader())):
+        ys[i * batch_size: (i + 1) * batch_size] = list[1]
 
     # Eval
     from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, roc_curve
@@ -122,7 +122,7 @@ def main(args):
     if args.stage == 'train':
         ckpt, dm = train(args, cfg)
     else:
-        evaluate_celebvhq(args, cfg, args.ckpt)
+        evaluate_celebvhq(args, cfg, args.resume)
    
 if __name__ == '__main__':
     args = make_parse()

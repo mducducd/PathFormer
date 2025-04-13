@@ -48,14 +48,14 @@ class WSIDataset(LightningDataModule, ABC):
             feats = feats[cp:cp + window_size]
             coords = coords[cp:cp + window_size]
             augmented = augmented[cp:cp + window_size]
-
+        self.shuffle = True
         # Shuffle features if needed
-        # if self.shuffle:
-        #     indices = list(range(feats.shape[0]))
-        #     random.shuffle(indices)
-        #     feats = feats[indices]
-        #     coords = coords[indices]
-        #     augmented = augmented[indices]
+        if self.shuffle:
+            indices = list(range(feats.shape[0]))
+            random.shuffle(indices)
+            feats = feats[indices]
+            coords = coords[indices]
+            augmented = augmented[indices]
 
         return feats, torch.tensor(label, dtype=torch.long), coords, augmented
         # return feats, torch.tensor(label, dtype=torch.long)
@@ -114,7 +114,7 @@ class WSIDatasetModule(LightningDataModule):
         # split data
         train_df, test_df = train_test_split(raw_df, test_size=0.2, random_state=42, stratify=raw_df['label'])
         # train_df, val_df = train_test_split(train_val_df, test_size=0.2, random_state=42, stratify=train_val_df['label'])
-
+        
         # assign datasets
         self.train_dataset = WSIDataset(self.sampleid_to_path, train_df, "train")
         self.val_dataset = WSIDataset(self.sampleid_to_path, test_df, "val")

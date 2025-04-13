@@ -1,6 +1,6 @@
 General:
     comment: null
-    seed: 2021
+    seed: 42
     fp16: true
     amp_level: O2
     precision: 16

@@ -36,7 +36,7 @@ class WSIDataset(LightningDataModule, ABC):
             coords = torch.tensor(f['coords'][:], dtype=torch.float)
             feats = torch.tensor(f['feats'][:], dtype=torch.float)
         
-        if self.state == 'train' or self.state == 'test':
+        if self.state == 'train' or self.state == 'val':
             window_size = 128
             num_tiles = feats.shape[0]
 

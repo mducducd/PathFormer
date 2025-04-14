@@ -351,8 +351,8 @@ class CrossAttTransformer(nn.Module):
         self._fc1 = nn.Sequential(nn.Linear(1024, 512), nn.ReLU())
         self.cls_token = nn.Parameter(torch.randn(1, 1, 512))
         self.n_classes = n_classes
-        self.layer1 = CrossAttTransLayer(dim=512)
-        self.layer2 = CrossAttTransLayer(dim=512)
+        self.layer1 = CrossAttention(d_model=512, n_heads=8)
+        self.layer2 = CrossAttention(d_model=512, n_heads=8)
         self.norm = nn.LayerNorm(512)
         self._fc2 = nn.Linear(512, self.n_classes)
         self.coord_proj = nn.Linear(2, 512)
@@ -381,11 +381,11 @@ class CrossAttTransformer(nn.Module):
         coords = self.coord_proj(coords) #[B, N, 512]
 
         # Translayer x1
-        h = self.layer1(h, coords) #[B, N, 512]
+        h = self.layer1(h, coords, coords) #[B, N, 512]
 
 
         # Translayer x2
-        h = self.layer2(h, coords) #[B, N, 512]
+        h = self.layer2(h, coords, coords) #[B, N, 512]
 
         # cls_token
         h = self.norm(h)[:,0]

@@ -35,8 +35,9 @@ class WSIDataset(LightningDataModule, ABC):
             augmented = torch.tensor(f['augmented'][:])
             coords = torch.tensor(f['coords'][:], dtype=torch.float)
             feats = torch.tensor(f['feats'][:], dtype=torch.float)
-        # testing can be performed with  batch_size 1 for samples vary in N tiles but more memory required
-        if self.state == 'train' or self.state == 'test':  
+        # testing can be excluded in this condition
+        # to performed with  batch_size 1 for samples vary in N tiles but more memory required
+        if self.state == 'train' or self.state == 'val' or self.state == 'test':  
             window_size = 128
             num_tiles = feats.shape[0]
 

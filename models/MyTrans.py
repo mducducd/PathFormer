@@ -123,27 +123,27 @@ def _get_activation_fn(activation):
         return F.gelu
     raise ValueError("activation should be relu/gelu, not {}".format(activation))
 
-# class CrossAttention(nn.Module):
-#     def __init__(self, d_model=512, n_heads=8):
-#         super().__init__()
-#         self.multihead_attn = nn.MultiheadAttention(embed_dim=d_model, num_heads=n_heads, batch_first=True)
-#         self.ffn = nn.Sequential(
-#             nn.Linear(d_model, d_model),
-#             nn.ReLU(),
-#             nn.Linear(d_model, d_model)
-#         )
-#         self.layernorm1 = nn.LayerNorm(d_model)
-#         self.layernorm2 = nn.LayerNorm(d_model)
+class CrossAttention(nn.Module):
+    def __init__(self, d_model=512, n_heads=8):
+        super().__init__()
+        self.multihead_attn = nn.MultiheadAttention(embed_dim=d_model, num_heads=n_heads, batch_first=True)
+        self.ffn = nn.Sequential(
+            nn.Linear(d_model, d_model),
+            nn.ReLU(),
+            nn.Linear(d_model, d_model)
+        )
+        self.layernorm1 = nn.LayerNorm(d_model)
+        self.layernorm2 = nn.LayerNorm(d_model)
         
-#     def forward(self, query, key, value):
-#         # Cross-attention
-#         attn_output, _ = self.multihead_attn(query, key, value)
-#         query = self.layernorm1(query + attn_output)
+    def forward(self, query, key, value):
+        # Cross-attention
+        attn_output, _ = self.multihead_attn(query, key, value)
+        query = self.layernorm1(query + attn_output)
         
-#         # Feed-forward
-#         ffn_output = self.ffn(query)
-#         query = self.layernorm2(query + ffn_output)
-#         return query
+        # Feed-forward
+        ffn_output = self.ffn(query)
+        query = self.layernorm2(query + ffn_output)
+        return query
 
 # class TransformerEncoderLayer(nn.modules.Module):
 #     def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1, activation="relu"):
@@ -248,6 +248,8 @@ def _get_activation_fn(activation):
 # output = model(x, mask)
 # print( output.shape)
 
+### Coordinates bias Attention approach   
+
 class CTransLayer(nn.Module):
 
     def __init__(self, norm_layer=nn.LayerNorm, dim=512):
@@ -317,6 +319,71 @@ class CTransformer(nn.Module):
         # # PPEG
         # h = self.pos_layer(h, _H, _W) #[B, N, 512]
         
+        # Translayer x2
+        h = self.layer2(h, coords) #[B, N, 512]
+
+        # cls_token
+        h = self.norm(h)[:,0]
+
+        # predict
+        logits = self._fc2(h) # [B, n_classes]
+        return logits
+
+### Cross-Attention approach    
+
+class CrossAttTransLayer(nn.Module):
+
+    def __init__(self, norm_layer=nn.LayerNorm, dim=512):
+        super().__init__()
+        self.norm = norm_layer(dim)
+        self.cross_attention = CrossAttention(d_model=512, n_heads=8)
+
+    def forward(self, x, coords):  
+        x = x + self.cross_attention(query=self.norm(x), key=coords, value=coords)
+        
+        return x
+
+
+class CrossAttTransformer(nn.Module):
+    def __init__(self, n_classes):
+        super(CrossAttTransformer, self).__init__()
+        self.pos_layer = PPEG(dim=512)
+        self._fc1 = nn.Sequential(nn.Linear(1024, 512), nn.ReLU())
+        self.cls_token = nn.Parameter(torch.randn(1, 1, 512))
+        self.n_classes = n_classes
+        self.layer1 = CrossAttTransLayer(dim=512)
+        self.layer2 = CrossAttTransLayer(dim=512)
+        self.norm = nn.LayerNorm(512)
+        self._fc2 = nn.Linear(512, self.n_classes)
+        self.coord_proj = nn.Linear(2, 512)
+
+    def forward(self, h, coords, *args, **kwargs):
+
+        h = self._fc1(h) #[B, n, 512]
+
+        # pad
+        H = h.shape[1]
+        _H, _W = int(np.ceil(np.sqrt(H))), int(np.ceil(np.sqrt(H)))
+        add_length = _H * _W - H
+        h = torch.cat([h, h[:,:add_length,:]],dim = 1) #[B, N, 512]
+
+        # Pad coords similarly?
+        coords = torch.cat([coords, coords[:, :add_length, :]], dim=1)
+
+        # cls_token
+        B = h.shape[0]
+        cls_tokens = self.cls_token.expand(B, -1, -1).cuda()
+        h = torch.cat((cls_tokens, h), dim=1)
+
+        # Add the [CLS] token coordinates (zero predefined)
+        cls_coords = torch.zeros(B, 1, 2).cuda()
+        coords = torch.cat((cls_coords, coords), dim=1)
+        coords = self.coord_proj(coords) #[B, N, 512]
+
+        # Translayer x1
+        h = self.layer1(h, coords) #[B, N, 512]
+
+
         # Translayer x2
         h = self.layer2(h, coords) #[B, N, 512]
 
